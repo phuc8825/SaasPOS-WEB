@@ -1,0 +1,79 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const supabase = require('../config/supabase');
+
+const authService = {
+  async login(username, password) {
+    // Find user by username (search across all tenants by username)
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, tenant_id, username, email, password_hash, role, is_active')
+      .eq('username', username)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !user) {
+      throw new Error('Invalid username or password');
+    }
+
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    if (!isValid) {
+      throw new Error('Invalid username or password');
+    }
+
+    // Get tenant info
+    const { data: tenant, error: tenantError } = await supabase
+      .from('tenants')
+      .select('id, name, slug, email, phone, address, logo_url')
+      .eq('id', user.tenant_id)
+      .single();
+
+    if (tenantError || !tenant) {
+      throw new Error('Tenant not found');
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, tenantId: user.tenant_id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        tenantId: user.tenant_id,
+      },
+      tenant,
+    };
+  },
+
+  async changePassword(userId, tenantId, currentPassword, newPassword) {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, password_hash')
+      .eq('id', userId)
+      .eq('tenant_id', tenantId)
+      .single();
+
+    if (error || !user) throw new Error('User not found');
+
+    const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isValid) throw new Error('Current password is incorrect');
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ password_hash: hash })
+      .eq('id', userId)
+      .eq('tenant_id', tenantId);
+
+    if (updateError) throw new Error('Failed to update password');
+    return true;
+  },
+};
+
+module.exports = authService;
