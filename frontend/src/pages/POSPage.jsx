@@ -16,36 +16,39 @@ const PAYMENT_METHODS = [
 ]
 
 // ─────────────────────────────────────────────────────────────
-// Tách ra NGOÀI POSPage để tránh re-mount mỗi lần state thay đổi
+// InputField tách ra NGOÀI hoàn toàn để tránh re-mount mỗi render
+// ─────────────────────────────────────────────────────────────
+const InputField = ({ label, icon: Icon, field, type = 'text', placeholder, required, value, onChange, error }) => (
+  <div>
+    <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
+      <span className="flex items-center gap-1.5">
+        {Icon && <Icon size={13} style={{ color: 'var(--text-secondary)' }} />}
+        {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
+      </span>
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={e => onChange(field, e.target.value)}
+      placeholder={placeholder}
+      autoComplete="off"
+      className={`input-field${error ? ' border-red-400' : ''}`}
+    />
+    {error && (
+      <div className="flex items-center gap-1 mt-1 text-xs" style={{ color: '#ef4444' }}>
+        <AlertCircle size={11} /> {error}
+      </div>
+    )}
+  </div>
+)
+
+// ─────────────────────────────────────────────────────────────
+// CheckoutModal tách ra NGOÀI POSPage để tránh re-mount mỗi lần state thay đổi
 // ─────────────────────────────────────────────────────────────
 const CheckoutModal = memo(function CheckoutModal({
   checkoutForm, errors, processing, subtotal, total, discount, itemCount,
   onClose, onSubmit, onFieldChange,
 }) {
-  const InputField = ({ label, icon: Icon, field, type = 'text', placeholder, required }) => (
-    <div>
-      <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
-        <span className="flex items-center gap-1.5">
-          {Icon && <Icon size={13} style={{ color: 'var(--text-secondary)' }} />}
-          {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
-        </span>
-      </label>
-      <input
-        type={type}
-        value={checkoutForm[field]}
-        onChange={e => onFieldChange(field, e.target.value)}
-        placeholder={placeholder}
-        autoComplete="off"
-        className={`input-field${errors[field] ? ' border-red-400' : ''}`}
-      />
-      {errors[field] && (
-        <div className="flex items-center gap-1 mt-1 text-xs" style={{ color: '#ef4444' }}>
-          <AlertCircle size={11} /> {errors[field]}
-        </div>
-      )}
-    </div>
-  )
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
@@ -66,12 +69,27 @@ const CheckoutModal = memo(function CheckoutModal({
             Thông tin khách hàng
           </div>
           <div className="space-y-3">
-            <InputField label="Họ và tên" icon={User} field="customerName"
-              placeholder="Nguyễn Văn A" required />
-            <InputField label="Số điện thoại" icon={Phone} field="customerPhone"
-              type="tel" placeholder="0901 234 567" required />
-            <InputField label="Email nhận hóa đơn" icon={Mail} field="customerEmail"
-              type="email" placeholder="khach@email.com" required />
+            <InputField
+              label="Họ và tên" icon={User} field="customerName"
+              placeholder="Nguyễn Văn A" required
+              value={checkoutForm.customerName}
+              onChange={onFieldChange}
+              error={errors.customerName}
+            />
+            <InputField
+              label="Số điện thoại" icon={Phone} field="customerPhone"
+              type="tel" placeholder="0901 234 567" required
+              value={checkoutForm.customerPhone}
+              onChange={onFieldChange}
+              error={errors.customerPhone}
+            />
+            <InputField
+              label="Email nhận hóa đơn" icon={Mail} field="customerEmail"
+              type="email" placeholder="khach@email.com" required
+              value={checkoutForm.customerEmail}
+              onChange={onFieldChange}
+              error={errors.customerEmail}
+            />
           </div>
         </div>
 
@@ -261,7 +279,6 @@ export default function POSPage() {
   const [filterCat, setFilterCat] = useState('')
   const [cart, setCart] = useState([])
   const [loading, setLoading] = useState(true)
-
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [receiptData, setReceiptData] = useState(null)
   const [checkoutForm, setCheckoutForm] = useState({
@@ -370,7 +387,6 @@ export default function POSPage() {
   // ── Render ──────────────────────────────────────────────────
   return (
     <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
-
       {/* ── Left: Products ─── */}
       <div className="flex-1 flex flex-col min-w-0">
         <div className="p-3 flex gap-3 flex-shrink-0"
@@ -516,7 +532,7 @@ export default function POSPage() {
         </div>
       </div>
 
-      {/* ── Modals (mounted ở top level, không re-create) ─── */}
+      {/* ── Modals ─── */}
       {checkoutOpen && (
         <CheckoutModal
           checkoutForm={checkoutForm}
@@ -531,6 +547,7 @@ export default function POSPage() {
           onFieldChange={handleFieldChange}
         />
       )}
+
       {receiptData && (
         <ReceiptModal
           transaction={receiptData}

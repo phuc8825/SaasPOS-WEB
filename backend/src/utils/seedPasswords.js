@@ -1,5 +1,4 @@
-// Run this to get the bcrypt hash for 'admin123'
-// node src/utils/seedPasswords.js
+
 const bcrypt = require('bcrypt');
 
 async function main() {

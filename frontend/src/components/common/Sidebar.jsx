@@ -3,21 +3,24 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import {
   LayoutDashboard, ShoppingCart, Package, Receipt,
-  LogOut, Moon, Sun, ShoppingBag, ChevronRight, ShieldCheck
+  LogOut, Moon, Sun, ShoppingBag, ChevronRight, ShieldCheck, Users
 } from 'lucide-react'
 import { getInitials } from '../../utils/format'
 
+// Navigation items for normal shop users (manager / cashier)
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/pos', icon: ShoppingCart, label: 'Bán hàng (POS)' },
   { to: '/products', icon: Package, label: 'Sản phẩm' },
   { to: '/transactions', icon: Receipt, label: 'Lịch sử' },
+  // Staff management – visible for manager and cashier (non‑superadmin)
+  { to: '/staff', icon: Users, label: 'Nhân viên' },
 ]
 
 const SUPER_ADMIN_KEY = import.meta.env.VITE_SUPER_ADMIN_KEY || ''
 
 export default function Sidebar() {
-  const { user, tenant, logout, isAdmin } = useAuth()
+  const { user, tenant, logout, isAdmin, isSuperAdmin } = useAuth()
   const { dark, toggle } = useTheme()
   const navigate = useNavigate()
 
@@ -50,7 +53,8 @@ export default function Sidebar() {
           style={{ color: 'rgba(255,255,255,0.22)' }}>
           Menu
         </div>
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {/* Render normal navigation only for non‑superadmin users */}
+        {!isSuperAdmin && navItems.map(({ to, icon: Icon, label }) => (
           <NavLink key={to} to={to}
             className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
             <Icon size={17} />
@@ -59,8 +63,8 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        {/* Admin section — only shown when SUPER_ADMIN_KEY is set in env */}
-        {SUPER_ADMIN_KEY && (
+        {/* Admin section – shown for superadmin (or when SUPER_ADMIN_KEY is set) */}
+        {(SUPER_ADMIN_KEY || isSuperAdmin) && (
           <>
             <div className="text-xs font-semibold uppercase tracking-widest mb-1 mt-4 px-3"
               style={{ color: 'rgba(255,255,255,0.22)' }}>
@@ -92,7 +96,10 @@ export default function Sidebar() {
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-white truncate">{user?.username}</div>
             <div className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              {user?.role === 'admin' ? '👑 Admin' : user?.role === 'manager' ? '🎯 Manager' : '💼 Cashier'}
+              {user?.role === 'super_admin' ? '🛡️ Super Admin'
+                : user?.role === 'admin' ? '👑 Admin'
+                : user?.role === 'manager' ? '🎯 Manager'
+                : '💼 Cashier'}
             </div>
           </div>
           <button onClick={handleLogout} title="Đăng xuất"

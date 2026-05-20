@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { ShoppingBag, Eye, EyeOff, Zap } from 'lucide-react'
+import { ShoppingBag, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const { login, loading } = useAuth()
@@ -15,18 +15,21 @@ export default function LoginPage() {
     const result = await login(form.username, form.password)
     if (result.success) {
       toast.success('Đăng nhập thành công!')
-      navigate('/dashboard')
+      // Redirect theo role
+      if (result.role === 'super_admin') {
+        navigate('/admin')
+      } else {
+        navigate('/dashboard')
+      }
     } else {
       toast.error(result.message)
     }
   }
 
-  const quickLogin = (user, pw) => setForm({ username: user, password: pw })
-
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0a2e 50%, #0f0f1a 100%)' }}>
-      
+
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
@@ -52,29 +55,39 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl p-8" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="rounded-2xl p-8"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
           <h2 className="text-xl font-semibold text-white mb-6">Đăng nhập</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-purple-200 mb-1.5">Tên đăng nhập</label>
+              <label className="block text-sm font-medium text-purple-200 mb-1.5">
+                Tên đăng nhập
+              </label>
               <input
                 type="text"
                 value={form.username}
-                onChange={(e) => setForm(f => ({ ...f, username: e.target.value }))}
+                onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
                 placeholder="Nhập tên đăng nhập"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none text-white placeholder-gray-500 transition-all"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
                 required
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-purple-200 mb-1.5">Mật khẩu</label>
+              <label className="block text-sm font-medium text-purple-200 mb-1.5">
+                Mật khẩu
+              </label>
               <div className="relative">
                 <input
                   type={showPw ? 'text' : 'password'}
                   value={form.password}
-                  onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                   placeholder="Nhập mật khẩu"
                   className="w-full px-4 py-3 pr-12 rounded-xl text-sm outline-none text-white placeholder-gray-500 transition-all"
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.1)' }}
@@ -89,10 +102,36 @@ export default function LoginPage() {
 
             <button type="submit" disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-white text-sm transition-all active:scale-95 disabled:opacity-50 mt-2"
-              style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
+              style={{
+                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
+              }}>
               {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
+
+          {/* Hint */}
+          <div className="mt-6 pt-5 border-t border-white/10 space-y-1.5">
+            <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              Tài khoản demo
+            </p>
+            {[
+              { label: '👑 Super Admin', user: 'superadmin', pw: 'superadmin123' },
+              { label: '🏪 Manager Nike', user: 'admin_nike', pw: 'admin123' },
+              { label: '💼 Cashier Nike', user: 'cashier_nike', pw: 'admin123' },
+            ].map(({ label, user, pw }) => (
+              <button key={user}
+                onClick={() => setForm({ username: user, password: pw })}
+                className="w-full text-left px-3 py-2 rounded-lg text-xs transition-all"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  color: 'rgba(255,255,255,0.5)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                {label} — <span className="font-mono">{user}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

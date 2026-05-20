@@ -6,21 +6,19 @@ import {
   Eye, EyeOff, ShieldCheck, RefreshCw, Check
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import api from '../services/api' // reuse axios instance that automatically adds JWT token
 
 const SUPER_ADMIN_KEY = import.meta.env.VITE_SUPER_ADMIN_KEY || ''
 
+// Super admin API helper – uses the existing axios instance (which adds the JWT Authorization header)
+// and adds the required X‑Super‑Admin‑Key header.
 const adminApi = async (method, path, body) => {
-  const res = await fetch(`/api${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Super-Admin-Key': SUPER_ADMIN_KEY,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.message || 'Request failed')
-  return data
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Super-Admin-Key': SUPER_ADMIN_KEY,
+  }
+  const response = await api.request({ method, url: path, headers, data: body })
+  return response.data
 }
 
 const emptyForm = {

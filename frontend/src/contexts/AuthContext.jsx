@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 import api from '../services/api'
 
 const AuthContext = createContext(null)
@@ -17,14 +17,18 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.post('/auth/login', { username, password })
       const { token, user: userData, tenant: tenantData } = data.data
+
       localStorage.setItem('pos_token', token)
       localStorage.setItem('pos_user', JSON.stringify(userData))
       localStorage.setItem('pos_tenant', JSON.stringify(tenantData))
+
       setUser(userData)
       setTenant(tenantData)
-      return { success: true }
+
+      // Trả về role để LoginPage redirect đúng chỗ
+      return { success: true, role: userData.role }
     } catch (err) {
-      return { success: false, message: err.response?.data?.message || 'Login failed' }
+      return { success: false, message: err.response?.data?.message || 'Đăng nhập thất bại' }
     } finally {
       setLoading(false)
     }
@@ -38,10 +42,18 @@ export function AuthProvider({ children }) {
     setTenant(null)
   }, [])
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'manager'
+  const isSuperAdmin = user?.role === 'super_admin'
+  const isManager = user?.role === 'manager'
+  const isCashier = user?.role === 'cashier'
+  // Một số shop có thể lưu vai trò quản lý dưới tên "admin". Để UI hiển thị đúng, coi cả "manager" và "admin" là admin của shop.
+  const isAdmin = isManager || user?.role === 'admin'
 
   return (
-    <AuthContext.Provider value={{ user, tenant, loading, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{
+      user, tenant, loading,
+      login, logout,
+      isSuperAdmin, isManager, isCashier, isAdmin,
+    }}>
       {children}
     </AuthContext.Provider>
   )

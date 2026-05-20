@@ -11,7 +11,6 @@ const authMiddleware = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Verify user still exists and is active
     const { data: user, error } = await supabase
       .from('users')
       .select('id, tenant_id, username, role, is_active')
@@ -24,36 +23,30 @@ const authMiddleware = async (req, res, next) => {
     }
 
     req.user = {
-      userId: user.id,
+      userId:   user.id,
       tenantId: user.tenant_id,
       username: user.username,
-      role: user.role,
+      role:     user.role,   // 'manager' | 'cashier'
     };
 
     next();
   } catch (err) {
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(401).json({ success: false, message: 'Invalid token' });
-    }
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ success: false, message: 'Token expired' });
-    }
+    if (err.name === 'JsonWebTokenError')  return res.status(401).json({ success: false, message: 'Invalid token' });
+    if (err.name === 'TokenExpiredError')  return res.status(401).json({ success: false, message: 'Token expired' });
     next(err);
   }
 };
 
+// Kiểm tra role trong JWT
 const requireRole = (...roles) => (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ success: false, message: 'Unauthorized' });
-  }
+  if (!req.user) return res.status(401).json({ success: false, message: 'Unauthorized' });
   if (!roles.includes(req.user.role)) {
-    return res.status(403).json({ success: false, message: 'Insufficient permissions' });
+    return res.status(403).json({ success: false, message: 'Bạn không có quyền thực hiện thao tác này' });
   }
   next();
 };
 
-module.exports = { authMiddleware, requireRole };
-
+// SuperAdmin dùng header key riêng — hoàn toàn tách biệt với JWT shop
 const superAdminMiddleware = (req, res, next) => {
   const key = req.headers['x-super-admin-key'];
   if (!key || key !== process.env.SUPER_ADMIN_KEY) {
