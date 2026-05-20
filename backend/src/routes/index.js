@@ -14,8 +14,8 @@ const adminOnly = [...protect, requireRole('manager', 'cashier', 'admin')]; // g
 // Managers (and admins) can manage staff and products. Include 'admin' role for broader permissions.
 const managerOnly = [...protect, requireRole('manager', 'admin')];
 
-// Super admin routes — dùng JWT (authMiddleware) + kiểm tra isSuperAdmin
-const superAdminProtect = [authMiddleware, superAdminMiddleware];
+// Super admin routes — dùng X-Super-Admin-Key header CHỈNH sức, KHÔNG cần JWT
+const superAdminProtect = [superAdminMiddleware];
 
 // ---- AUTH ----
 router.post('/auth/login', authController.login);
@@ -59,23 +59,7 @@ router.delete('/admin/tenants/:tenantId/users/:userId', ...superAdminProtect, te
 router.get('/tenants/:id/users', ...protect, tenantController.getUsers);
 router.post('/tenants/:id/users', ...managerOnly, tenantController.createUser);
 router.put('/tenants/:tenantId/users/:userId', ...managerOnly, tenantController.updateUser);
+router.put('/tenants/:tenantId/users/:userId/password', ...managerOnly, tenantController.resetPassword);
 router.delete('/tenants/:tenantId/users/:userId', ...managerOnly, tenantController.deleteUser);
-console.log('authController.login:', authController.login)
 
-console.log('productController.delete:', productController.delete)
-
-console.log('transactionController.create:', transactionController.create)
-
-console.log('dashboardController.getStats:', dashboardController.getStats)
-
-console.log('tenantController.deleteTenant:', tenantController.deleteTenant)
-
-console.log('tenantController.deleteUser:', tenantController.deleteUser)
-
-console.log('authMiddleware:', authMiddleware)
-
-console.log('tenantMiddleware:', tenantMiddleware)
-
-console.log('superAdminMiddleware:', superAdminMiddleware)
-console.log('tenantController = ', tenantController)
 module.exports = router;

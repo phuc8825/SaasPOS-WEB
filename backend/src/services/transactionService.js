@@ -101,8 +101,7 @@ const transactionService = {
           .eq('id', transaction.id);
         fullTransaction.receipt_sent = true;
       } catch (emailErr) {
-        console.error('Email send failed:', emailErr.message);
-        // Don't fail the transaction if email fails
+        // Email send failed, but don't fail the transaction
       }
     }
 

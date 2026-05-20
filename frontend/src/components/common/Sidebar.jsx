@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import {
   LayoutDashboard, ShoppingCart, Package, Receipt,
-  LogOut, Moon, Sun, ShoppingBag, ChevronRight, ShieldCheck, Users
+  LogOut, Moon, Sun, ShoppingBag, ChevronRight, Users
 } from 'lucide-react'
 import { getInitials } from '../../utils/format'
 
@@ -16,8 +16,6 @@ const navItems = [
   // Staff management – visible for manager and cashier (non‑superadmin)
   { to: '/staff', icon: Users, label: 'Nhân viên' },
 ]
-
-const SUPER_ADMIN_KEY = import.meta.env.VITE_SUPER_ADMIN_KEY || ''
 
 export default function Sidebar() {
   const { user, tenant, logout, isAdmin, isSuperAdmin } = useAuth()
@@ -63,8 +61,8 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        {/* Admin section – shown for superadmin (or when SUPER_ADMIN_KEY is set) */}
-        {(SUPER_ADMIN_KEY || isSuperAdmin) && (
+        {/* Admin section – shown for superadmin only */}
+        {isSuperAdmin && (
           <>
             <div className="text-xs font-semibold uppercase tracking-widest mb-1 mt-4 px-3"
               style={{ color: 'rgba(255,255,255,0.22)' }}>
@@ -72,7 +70,6 @@ export default function Sidebar() {
             </div>
             <NavLink to="/admin"
               className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
-              <ShieldCheck size={17} />
               <span className="flex-1">Quản lý shop</span>
               <ChevronRight size={13} className="opacity-30" />
             </NavLink>

@@ -91,6 +91,19 @@ const tenantController = {
       next(err);
     }
   },
+
+  // Reset password for a user
+  async resetPassword(req, res, next) {
+    try {
+      const { tenantId, userId } = req.params;
+      const { newPassword } = req.body;
+      await tenantService.resetPassword(tenantId, userId, newPassword);
+      res.json({ success: true, message: 'Password reset successfully' });
+    } catch (err) {
+      next(err);
+    }
+  },    
+  
 };
 
 module.exports = tenantController;

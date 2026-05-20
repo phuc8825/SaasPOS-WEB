@@ -140,7 +140,6 @@ const buildReceiptHTML = (transaction, tenant) => {
 const emailService = {
   async sendReceipt(toEmail, transaction, tenant) {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('Email credentials not configured, skipping email send');
       return false;
     }
 

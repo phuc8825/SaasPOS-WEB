@@ -27,7 +27,7 @@ export default function StaffPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => { fetchStaff(); }, []);
 
@@ -132,9 +132,6 @@ export default function StaffPage() {
     } finally { setSaving(false); }
   }
 
-  // toggleActive removed – status handling not needed
-  // const activeCount = staff.filter(s => s.is_active).length; // removed status handling
-
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Header */}
@@ -143,7 +140,7 @@ export default function StaffPage() {
           <h1 className="text-2xl font-bold text-gray-900">Quản lý nhân viên</h1>
           {/* Removed active count display */}
         </div>
-        {user?.role === 'manager' && (
+        {isAdmin && (
           <button
             onClick={openCreate}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2"
@@ -215,38 +212,40 @@ export default function StaffPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        {user?.role === 'manager' && (
-                          <button
-                            onClick={() => openEdit(s)}
-                            className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                            title="Chỉnh sửa"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
+                        {isAdmin && (
+                          <>
+                            <button
+                              onClick={() => openEdit(s)}
+                              className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                              title="Chỉnh sửa"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => openPassword(s)}
+                              className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
+                              title="Đổi mật khẩu"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => openDelete(s)}
+                              className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                              title="Xóa"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </>
                         )}
-                        <button
-                          onClick={() => openPassword(s)}
-                          className="p-1.5 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
-                          title="Đổi mật khẩu"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => openDelete(s)}
-                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                          title="Xóa"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -295,12 +294,6 @@ export default function StaffPage() {
                     <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                       className="input" placeholder="0912 345 678" />
                   </Field>
-                  <Field label="Vai trò">
-                    <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-                      className="input">
-                      {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                    </select>
-                  </Field>
                   {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
                 </div>
                 <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
@@ -335,7 +328,21 @@ export default function StaffPage() {
               </form>
             )}
 
-            {/* DELETE ... (truncated) */}
+            {/* DELETE CONFIRMATION modal */}
+            {modal === 'delete' && (
+              <div>
+                <div className="px-6 py-5 border-b border-gray-100">
+                  <h2 className="text-lg font-semibold text-gray-900">Xác nhận xóa</h2>
+                  <p className="text-sm text-gray-500 mt-1">Bạn có chắc chắn muốn vô hiệu hóa nhân viên <strong>{selected?.name || selected?.username}</strong>?</p>
+                </div>
+                <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
+                  <button type="button" onClick={closeModal} className="btn-ghost">Hủy</button>
+                  <button onClick={handleDelete} disabled={saving} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
+                    {saving ? 'Đang xóa...' : 'Xóa'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

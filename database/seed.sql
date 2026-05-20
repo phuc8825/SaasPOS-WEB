@@ -1,5 +1,12 @@
 
 
+-- SUPER ADMIN
+INSERT INTO super_admins (username, email, password_hash, is_active) VALUES
+  ('superadmin',
+   'superadmin@saaspos.vn',
+   '$2b$10$T3nXImlRjRuRp5JqMPjzauaOC1ZBAiz0pRpMFoNB7n7LmF.knP64G',
+   true);
+
 -- TENANT A: Nike Store
 INSERT INTO tenants (id, name, slug, email, phone, address) VALUES
   ('a0000000-0000-0000-0000-000000000001',
@@ -15,13 +22,13 @@ INSERT INTO users (id, tenant_id, username, email, password_hash, role) VALUES
    'a0000000-0000-0000-0000-000000000001',
    'admin_nike',
    'admin@nikestore.vn',
-   '$2b$10$s2pYHcHml6aUSxqfHXxrsetbJEUUTYcD1bS01NE92eeTqzPmU4k6a',
-   'admin'),
+   '$2b$10$OS2sllDk/VzmduRTdZYr6ek1bCdjNGSB3O.7Vl5en4SkVrKqcSLKS',
+   'manager'),
   ('a1000000-0000-0000-0000-000000000002',
    'a0000000-0000-0000-0000-000000000001',
    'cashier_nike',
    'cashier@nikestore.vn',
-   '$2b$10$s2pYHcHml6aUSxqfHXxrsetbJEUUTYcD1bS01NE92eeTqzPmU4k6a',
+   '$2b$10$OS2sllDk/VzmduRTdZYr6ek1bCdjNGSB3O.7Vl5en4SkVrKqcSLKS',
    'cashier');
 
 -- Products for Tenant A (Nike) — 4 sản phẩm
@@ -68,13 +75,13 @@ INSERT INTO users (id, tenant_id, username, email, password_hash, role) VALUES
    'b0000000-0000-0000-0000-000000000002',
    'admin_uniqlo',
    'admin@uniqlo.vn',
-   '$2b$10$s2pYHcHml6aUSxqfHXxrsetbJEUUTYcD1bS01NE92eeTqzPmU4k6a',
-   'admin'),
+   '$2b$10$OS2sllDk/VzmduRTdZYr6ek1bCdjNGSB3O.7Vl5en4SkVrKqcSLKS',
+   'manager'),
   ('b1000000-0000-0000-0000-000000000002',
    'b0000000-0000-0000-0000-000000000002',
    'cashier_uniqlo',
    'cashier@uniqlo.vn',
-   '$2b$10$s2pYHcHml6aUSxqfHXxrsetbJEUUTYcD1bS01NE92eeTqzPmU4k6a',
+   '$2b$10$OS2sllDk/VzmduRTdZYr6ek1bCdjNGSB3O.7Vl5en4SkVrKqcSLKS',
    'cashier');
 
 -- Products for Tenant B (Uniqlo) — 4 sản phẩm

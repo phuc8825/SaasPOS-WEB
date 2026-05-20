@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
 import { formatCurrency, formatDate } from '../utils/format'
-import { Receipt, ChevronDown, ChevronUp, Search, Calendar, X } from 'lucide-react'
+import { Receipt, ChevronDown, ChevronUp, Calendar, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function TransactionsPage() {

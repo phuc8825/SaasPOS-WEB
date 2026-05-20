@@ -109,29 +109,6 @@ export default function LoginPage() {
               {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
-
-          {/* Hint */}
-          <div className="mt-6 pt-5 border-t border-white/10 space-y-1.5">
-            <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              Tài khoản demo
-            </p>
-            {[
-              { label: '👑 Super Admin', user: 'superadmin', pw: 'superadmin123' },
-              { label: '🏪 Manager Nike', user: 'admin_nike', pw: 'admin123' },
-              { label: '💼 Cashier Nike', user: 'cashier_nike', pw: 'admin123' },
-            ].map(({ label, user, pw }) => (
-              <button key={user}
-                onClick={() => setForm({ username: user, password: pw })}
-                className="w-full text-left px-3 py-2 rounded-lg text-xs transition-all"
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  color: 'rgba(255,255,255,0.5)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                }}>
-                {label} — <span className="font-mono">{user}</span>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     </div>

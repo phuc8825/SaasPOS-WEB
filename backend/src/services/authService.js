@@ -5,7 +5,7 @@ const supabase = require('../config/supabase');
 const authService = {
   async login(username, password) {
     // 1. Thử tìm trong bảng super_admins trước
-    const { data: superAdmin } = await supabase
+    const { data: superAdmin, error: superAdminError } = await supabase
       .from('super_admins')
       .select('id, username, email, password_hash, is_active')
       .eq('username', username)

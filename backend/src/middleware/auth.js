@@ -46,13 +46,29 @@ const requireRole = (...roles) => (req, res, next) => {
   next();
 };
 
-// SuperAdmin dùng header key riêng — hoàn toàn tách biệt với JWT shop
-const superAdminMiddleware = (req, res, next) => {
-  const key = req.headers['x-super-admin-key'];
-  if (!key || key !== process.env.SUPER_ADMIN_KEY) {
-    return res.status(403).json({ success: false, message: 'Super admin access required' });
+// SuperAdmin middleware — chấp nhận JWT token với role 'super_admin' HOẶC header key
+const superAdminMiddleware = async (req, res, next) => {
+  // 1. Kiểm tra JWT token trước (superadmin đăng nhập)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.role === 'super_admin') {
+        return next();
+      }
+    } catch (err) {
+      // Token không hợp lệ, tiếp tục kiểm tra header key
+    }
   }
-  next();
+
+  // 2. Kiểm tra header key (fallback)
+  const key = req.headers['x-super-admin-key'];
+  if (key && key === process.env.SUPER_ADMIN_KEY) {
+    return next();
+  }
+
+  return res.status(403).json({ success: false, message: 'Super admin access required' });
 };
 
 module.exports = { authMiddleware, requireRole, superAdminMiddleware };

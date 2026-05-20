@@ -6,6 +6,20 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================
+-- SUPER ADMINS (System administrators)
+-- ============================================================
+CREATE TABLE super_admins (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username VARCHAR(100) NOT NULL UNIQUE,
+  email VARCHAR(255),
+  password_hash VARCHAR(255) NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_super_admins_username ON super_admins(username);
+
+-- ============================================================
 -- TENANTS
 -- ============================================================
 CREATE TABLE tenants (

@@ -10,12 +10,10 @@ import StaffPage from './pages/StaffPage.jsx'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 
-// Guard: chỉ cho vào /admin nếu role là 'admin'
+// Guard: chỉ cho vào /admin nếu role là 'super_admin'
 function AdminRoute() {
   const { user } = useAuth()
-  // Allow both regular admin (role "admin") and super admin (role "super_admin")
-  const allowedRoles = ['admin', 'super_admin']
-  if (!allowedRoles.includes(user?.role)) return <Navigate to="/dashboard" replace />
+  if (user?.role !== 'super_admin') return <Navigate to="/dashboard" replace />
   return <AdminPage />
 }
 

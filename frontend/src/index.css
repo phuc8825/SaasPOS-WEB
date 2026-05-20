@@ -86,6 +86,20 @@
     color: var(--text-secondary);
   }
 
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all duration-150;
+    background-color: var(--bg-secondary);
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+  }
+  .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  }
+  .input::placeholder {
+    color: var(--text-secondary);
+  }
+
   .sidebar-item {
     @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-150;
     color: rgba(255,255,255,0.55);

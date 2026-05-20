@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { formatCurrency, formatDate } from '../utils/format'
 import {
   TrendingUp, ShoppingBag, Package, DollarSign,
-  RefreshCw, Calendar, ArrowUp, ArrowDown
+  RefreshCw, Calendar
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -136,7 +136,7 @@ export default function DashboardPage() {
           {/* Top Products */}
           <div className="card p-5 lg:col-span-2">
             <h3 className="font-semibold text-sm mb-4" style={{ color: 'var(--text-primary)' }}>
-              🏆 Top sản phẩm
+              Top sản phẩm
             </h3>
             <div className="space-y-2">
               {(stats?.topProducts || []).slice(0, 6).map((product, i) => (

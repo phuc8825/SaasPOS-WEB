@@ -165,6 +165,23 @@ const tenantService = {
     if (!data) throw new Error('User not found');
     return true;
   },
+
+  async resetPassword(tenantId, userId, newPassword) {
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const { data, error } = await supabase
+      .from('users')
+      .update({ password_hash: passwordHash })
+      .eq('id', userId)
+      .eq('tenant_id', tenantId)
+      .select('id, username, email, role')
+      .single();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('User not found');
+    return data;
+  },
 };
 
 module.exports = tenantService;
