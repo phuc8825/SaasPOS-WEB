@@ -10,9 +10,9 @@ const tenantMiddleware = require('../middleware/tenant');
 const router = express.Router();
 
 const protect = [authMiddleware, tenantMiddleware];
-const adminOnly = [...protect, requireRole('manager', 'cashier', 'admin')]; // giữ tương thích
-// Managers (and admins) can manage staff and products. Include 'admin' role for broader permissions.
-const managerOnly = [...protect, requireRole('manager', 'admin')];
+const adminOnly = [...protect, requireRole('admin', 'cashier')]; // Admin hoặc Cashier
+// Admins can manage staff and products.
+const adminManagementOnly = [...protect, requireRole('admin')];
 
 // Super admin routes — dùng X-Super-Admin-Key header CHỈNH sức, KHÔNG cần JWT
 const superAdminProtect = [superAdminMiddleware];
@@ -26,9 +26,9 @@ router.put('/auth/password', authMiddleware, authController.changePassword);
 router.get('/products', ...protect, productController.getAll);
 router.get('/products/categories', ...protect, productController.getCategories);
 router.get('/products/:id', ...protect, productController.getById);
-router.post('/products', ...managerOnly, productController.create);
-router.put('/products/:id', ...managerOnly, productController.update);
-router.delete('/products/:id', ...managerOnly, productController.delete);
+router.post('/products', ...adminManagementOnly, productController.create);
+router.put('/products/:id', ...adminManagementOnly, productController.update);
+router.delete('/products/:id', ...adminManagementOnly, productController.delete);
 
 // ---- TRANSACTIONS ----
 router.post('/transactions', ...protect, transactionController.create);
@@ -53,13 +53,13 @@ router.post('/admin/tenants/:id/users', ...superAdminProtect, tenantController.c
 router.put('/admin/tenants/:tenantId/users/:userId', ...superAdminProtect, tenantController.updateUser);
 router.delete('/admin/tenants/:tenantId/users/:userId', ...superAdminProtect, tenantController.deleteUser);
 
-// ---- STAFF MANAGEMENT FOR TENANT (MANAGER / CASHIER) ----
-// Managers can view, create, update, delete staff of their own tenant.
+// ---- STAFF MANAGEMENT FOR TENANT (ADMIN / CASHIER) ----
+// Admins can view, create, update, delete staff of their own tenant.
 // Cashiers can only view the list.
 router.get('/tenants/:id/users', ...protect, tenantController.getUsers);
-router.post('/tenants/:id/users', ...managerOnly, tenantController.createUser);
-router.put('/tenants/:tenantId/users/:userId', ...managerOnly, tenantController.updateUser);
-router.put('/tenants/:tenantId/users/:userId/password', ...managerOnly, tenantController.resetPassword);
-router.delete('/tenants/:tenantId/users/:userId', ...managerOnly, tenantController.deleteUser);
+router.post('/tenants/:id/users', ...adminManagementOnly, tenantController.createUser);
+router.put('/tenants/:tenantId/users/:userId', ...adminManagementOnly, tenantController.updateUser);
+router.put('/tenants/:tenantId/users/:userId/password', ...adminManagementOnly, tenantController.resetPassword);
+router.delete('/tenants/:tenantId/users/:userId', ...adminManagementOnly, tenantController.deleteUser);
 
 module.exports = router;

@@ -43,16 +43,14 @@ export function AuthProvider({ children }) {
   }, [])
 
   const isSuperAdmin = user?.role === 'super_admin'
-  const isManager = user?.role === 'manager'
+  const isAdmin = user?.role === 'admin'
   const isCashier = user?.role === 'cashier'
-  // Một số shop có thể lưu vai trò quản lý dưới tên "admin". Để UI hiển thị đúng, coi cả "manager" và "admin" là admin của shop.
-  const isAdmin = isManager || user?.role === 'admin'
 
   return (
     <AuthContext.Provider value={{
       user, tenant, loading,
       login, logout,
-      isSuperAdmin, isManager, isCashier, isAdmin,
+      isSuperAdmin, isCashier, isAdmin,
     }}>
       {children}
     </AuthContext.Provider>

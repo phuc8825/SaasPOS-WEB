@@ -48,7 +48,7 @@ const tenantService = {
         username: ownerUsername,
         email: ownerEmail || email,
         password_hash: passwordHash,
-        role: 'manager',
+        role: 'admin',
       })
       .select('id, username, email, role')
       .single();
@@ -111,7 +111,7 @@ const tenantService = {
 
   async createUser(tenantId, { username, email, password, role = 'cashier' }) {
     if (!username || !password) throw new Error('Tên đăng nhập và mật khẩu là bắt buộc');
-    if (!['manager', 'cashier'].includes(role)) throw new Error('Role không hợp lệ');
+    if (!['admin', 'cashier'].includes(role)) throw new Error('Role không hợp lệ');
 
     // Kiểm tra username trùng trong tenant
     const { data: existing } = await supabase
@@ -133,7 +133,7 @@ const tenantService = {
     if (username !== undefined) updateData.username = username;
     if (email !== undefined) updateData.email = email;
     if (role !== undefined) {
-      if (!['manager', 'cashier'].includes(role)) throw new Error('Role không hợp lệ');
+      if (!['admin', 'cashier'].includes(role)) throw new Error('Role không hợp lệ');
       updateData.role = role;
     }
     if (is_active !== undefined) updateData.is_active = is_active;

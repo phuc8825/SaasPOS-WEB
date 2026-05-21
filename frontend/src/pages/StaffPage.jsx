@@ -7,8 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const ROLES = [
   { value: 'cashier', label: 'Thu ngân', color: 'bg-blue-100 text-blue-700' },
-  { value: 'manager', label: 'Quản lý', color: 'bg-purple-100 text-purple-700' },
-  { value: 'admin', label: 'Admin', color: 'bg-red-100 text-red-700' },
+  { value: 'admin', label: 'Quản lý', color: 'bg-purple-100 text-purple-700' },
 ];
 
 function roleInfo(role) {

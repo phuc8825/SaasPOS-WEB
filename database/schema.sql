@@ -42,7 +42,7 @@ CREATE TABLE users (
   username VARCHAR(100) NOT NULL,
   email VARCHAR(255),
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(50) NOT NULL DEFAULT 'cashier' CHECK (role IN ('admin', 'manager', 'cashier')),
+  role VARCHAR(50) NOT NULL DEFAULT 'cashier' CHECK (role IN ('admin', 'cashier')),
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(tenant_id, username)

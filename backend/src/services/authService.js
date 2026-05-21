@@ -35,7 +35,7 @@ const authService = {
       };
     }
 
-    // 2. Tìm trong bảng users (manager / cashier)
+    // 2. Tìm trong bảng users (admin / cashier)
     const { data: user, error } = await supabase
       .from('users')
       .select('id, tenant_id, username, email, password_hash, role, is_active')

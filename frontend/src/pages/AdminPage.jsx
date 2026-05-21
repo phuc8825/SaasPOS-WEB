@@ -551,7 +551,7 @@ export default function AdminPage() {
                       onChange={e => setUserForm(f => ({ ...f, role: e.target.value }))}
                       className="input-field">
                       <option value="cashier">Thu ngân</option>
-                      <option value="manager">Quản lý</option>
+                      <option value="admin">Quản lý</option>
                     </select>
                   </div>
                 </div>

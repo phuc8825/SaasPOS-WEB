@@ -7,13 +7,13 @@ import {
 } from 'lucide-react'
 import { getInitials } from '../../utils/format'
 
-// Navigation items for normal shop users (manager / cashier)
+// Navigation items for normal shop users (admin / cashier)
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/pos', icon: ShoppingCart, label: 'Bán hàng (POS)' },
   { to: '/products', icon: Package, label: 'Sản phẩm' },
   { to: '/transactions', icon: Receipt, label: 'Lịch sử' },
-  // Staff management – visible for manager and cashier (non‑superadmin)
+  // Staff management – visible for admin and cashier (non‑superadmin)
   { to: '/staff', icon: Users, label: 'Nhân viên' },
 ]
 
@@ -95,7 +95,6 @@ export default function Sidebar() {
             <div className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
               {user?.role === 'super_admin' ? '🛡️ Super Admin'
                 : user?.role === 'admin' ? '👑 Admin'
-                : user?.role === 'manager' ? '🎯 Manager'
                 : '💼 Cashier'}
             </div>
           </div>
