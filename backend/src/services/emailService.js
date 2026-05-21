@@ -110,19 +110,26 @@ const buildReceiptHTML = (transaction, tenant) => {
 
     <!-- Totals -->
     <div style="padding:0 32px 28px;">
-      <div style="border-top:1px solid #f0f0f8;padding-top:12px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-          <span style="font-size:14px;color:#888;">Tạm tính:</span>
-          <span style="font-size:14px;font-weight:500;color:#444;">${formatCurrency(transaction.subtotal)}</span>
-        </div>
-        ${transaction.discount > 0 ? `
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-          <span style="font-size:14px;color:#22c55e;">Giảm giá:</span>
-          <span style="font-size:14px;font-weight:500;color:#22c55e;">-${formatCurrency(transaction.discount)}</span>
-        </div>` : ''}
-        <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1a1a2e,#2d1b69);padding:16px 20px;border-radius:14px;margin-top:10px;">
+      <div style="border-top:1px solid #f0f0f8;padding-top:16px;">
+        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;">
+          <tr>
+            <td style="font-size:14px;color:#888;padding:6px 0;">Tạm tính:</td>
+            <td style="text-align:right;font-size:14px;font-weight:500;color:#444;">${formatCurrency(transaction.subtotal)}</td>
+          </tr>
+          ${transaction.tax > 0 ? `
+          <tr>
+            <td style="font-size:14px;color:#888;padding:6px 0;">Thuế:</td>
+            <td style="text-align:right;font-size:14px;font-weight:500;color:#f59e0b;">+${formatCurrency(transaction.tax)}</td>
+          </tr>` : ''}
+          ${transaction.discount > 0 ? `
+          <tr>
+            <td style="font-size:14px;color:#888;padding:6px 0;">Giảm giá:</td>
+            <td style="text-align:right;font-size:14px;font-weight:500;color:#10b981;">-${formatCurrency(transaction.discount)}</td>
+          </tr>` : ''}
+        </table>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1a1a2e,#2d1b69);padding:18px 20px;border-radius:14px;margin-top:14px;">
           <span style="color:#fff;font-size:16px;font-weight:700;">TỔNG CỘNG</span>
-          <span style="color:#c4b5fd;font-size:22px;font-weight:800;">${formatCurrency(transaction.total)}</span>
+          <span style="color:#c4b5fd;font-size:24px;font-weight:800;">${formatCurrency(transaction.total)}</span>
         </div>
       </div>
     </div>

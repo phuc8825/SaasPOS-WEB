@@ -4,7 +4,7 @@ const emailService = require('./emailService');
 const transactionService = {
   async create(tenantId, userId, {
     items, customerEmail, customerName, customerPhone,
-    paymentMethod, notes, discount = 0
+    paymentMethod, notes, discount = 0, tax = 0
   }) {
     if (!items || items.length === 0) throw new Error('No items in transaction');
 
@@ -47,7 +47,7 @@ const transactionService = {
     });
 
     const subtotal = transactionItems.reduce((sum, i) => sum + i.subtotal, 0);
-    const total = Math.max(0, subtotal - parseFloat(discount));
+    const total = Math.max(0, subtotal + parseFloat(tax) - parseFloat(discount));
 
     // Generate transaction code
     const { data: codeData } = await supabase.rpc('generate_transaction_code', { tenant_uuid: tenantId });
@@ -61,7 +61,7 @@ const transactionService = {
         user_id: userId,
         transaction_code: transactionCode,
         subtotal,
-        tax: 0,
+        tax: parseFloat(tax),
         discount: parseFloat(discount),
         total,
         payment_method: paymentMethod || 'cash',

@@ -85,6 +85,7 @@ CREATE TABLE transactions (
   payment_method VARCHAR(50) DEFAULT 'cash' CHECK (payment_method IN ('cash', 'card', 'transfer', 'other')),
   customer_email VARCHAR(255),
   customer_name VARCHAR(255),
+  customer_phone VARCHAR(20),
   notes TEXT,
   status VARCHAR(50) DEFAULT 'completed' CHECK (status IN ('completed', 'refunded', 'voided')),
   receipt_sent BOOLEAN DEFAULT FALSE,

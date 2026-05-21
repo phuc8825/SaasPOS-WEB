@@ -46,7 +46,7 @@ const InputField = ({ label, icon: Icon, field, type = 'text', placeholder, requ
 // CheckoutModal tách ra NGOÀI POSPage để tránh re-mount mỗi lần state thay đổi
 // ─────────────────────────────────────────────────────────────
 const CheckoutModal = memo(function CheckoutModal({
-  checkoutForm, errors, processing, subtotal, total, discount, itemCount,
+  checkoutForm, errors, processing, subtotal, total, tax, discount, itemCount,
   onClose, onSubmit, onFieldChange,
 }) {
   return (
@@ -118,19 +118,34 @@ const CheckoutModal = memo(function CheckoutModal({
           </div>
         </div>
 
-        {/* Discount */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
-            Giảm giá (VND)
-          </label>
-          <input
-            type="number"
-            value={checkoutForm.discount}
-            onChange={e => onFieldChange('discount', e.target.value)}
-            placeholder="0"
-            min="0"
-            className="input-field"
-          />
+        {/* Discount and Tax */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
+              Giảm giá (VND)
+            </label>
+            <input
+              type="number"
+              value={checkoutForm.discount}
+              onChange={e => onFieldChange('discount', e.target.value)}
+              placeholder="0"
+              min="0"
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
+              Thuế (VND) - Để trống = 10%
+            </label>
+            <input
+              type="number"
+              value={checkoutForm.tax}
+              onChange={e => onFieldChange('tax', e.target.value)}
+              placeholder={formatCurrency(subtotal * 0.1)}
+              min="0"
+              className="input-field"
+            />
+          </div>
         </div>
 
         {/* Order summary */}
@@ -139,6 +154,12 @@ const CheckoutModal = memo(function CheckoutModal({
             <span style={{ color: 'var(--text-secondary)' }}>Tạm tính ({itemCount} sản phẩm)</span>
             <span style={{ color: 'var(--text-primary)' }}>{formatCurrency(subtotal)}</span>
           </div>
+          {tax > 0 && (
+            <div className="flex justify-between text-sm">
+              <span style={{ color: 'var(--text-secondary)' }}>Thuế</span>
+              <span style={{ color: '#f59e0b' }}>+{formatCurrency(tax)}</span>
+            </div>
+          )}
           {discount > 0 && (
             <div className="flex justify-between text-sm">
               <span style={{ color: 'var(--text-secondary)' }}>Giảm giá</span>
@@ -240,6 +261,12 @@ const ReceiptModal = memo(function ReceiptModal({ transaction, tenant, onClose }
               <span style={{ color: 'var(--text-secondary)' }}>Tạm tính</span>
               <span style={{ color: 'var(--text-primary)' }}>{formatCurrency(transaction.subtotal)}</span>
             </div>
+            {transaction.tax > 0 && (
+              <div className="flex justify-between text-sm">
+                <span style={{ color: 'var(--text-secondary)' }}>Thuế</span>
+                <span style={{ color: '#f59e0b' }}>+{formatCurrency(transaction.tax)}</span>
+              </div>
+            )}
             {transaction.discount > 0 && (
               <div className="flex justify-between text-sm">
                 <span style={{ color: 'var(--text-secondary)' }}>Giảm giá</span>
@@ -283,7 +310,7 @@ export default function POSPage() {
   const [receiptData, setReceiptData] = useState(null)
   const [checkoutForm, setCheckoutForm] = useState({
     customerName: '', customerPhone: '', customerEmail: '',
-    paymentMethod: 'cash', discount: 0,
+    paymentMethod: 'cash', discount: 0, tax: '',
   })
   const [errors, setErrors] = useState({})
   const [processing, setProcessing] = useState(false)
@@ -332,7 +359,9 @@ export default function POSPage() {
 
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
   const discount = parseFloat(checkoutForm.discount) || 0
-  const total = Math.max(0, subtotal - discount)
+  const taxInput = parseFloat(checkoutForm.tax)
+  const tax = isNaN(taxInput) ? subtotal * 0.1 : taxInput // Mặc định 10% nếu không nhập
+  const total = Math.max(0, subtotal + tax - discount)
   const itemCount = cart.reduce((sum, i) => sum + i.quantity, 0)
 
   // ── Checkout form field handler (stable reference) ──────────
@@ -366,12 +395,13 @@ export default function POSPage() {
         customerEmail: checkoutForm.customerEmail.trim(),
         paymentMethod: checkoutForm.paymentMethod,
         discount,
+        tax,
       })
       const transaction = res.data.data
       setReceiptData(transaction)
       setCheckoutOpen(false)
       clearCart()
-      setCheckoutForm({ customerName: '', customerPhone: '', customerEmail: '', paymentMethod: 'cash', discount: 0 })
+      setCheckoutForm({ customerName: '', customerPhone: '', customerEmail: '', paymentMethod: 'cash', discount: 0, tax: '' })
       setErrors({})
       toast.success('Thanh toán thành công! 🎉')
       if (transaction.receipt_sent) {
@@ -520,13 +550,29 @@ export default function POSPage() {
         </div>
 
         <div className="p-4 flex-shrink-0" style={{ borderTop: '1px solid var(--border)' }}>
-          <div className="flex justify-between font-bold text-xl mb-4" style={{ color: 'var(--text-primary)' }}>
-            <span>Tổng</span>
-            <span style={{ color: '#8b5cf6' }}>{formatCurrency(subtotal)}</span>
+          <div className="space-y-2 mb-3">
+            <div className="flex justify-between text-sm">
+              <span style={{ color: 'var(--text-secondary)' }}>Tạm tính</span>
+              <span style={{ color: 'var(--text-primary)' }}>{formatCurrency(subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: 'var(--text-secondary)' }}>Thuế (10%)</span>
+              <span style={{ color: '#f59e0b' }}>+{formatCurrency(tax)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span style={{ color: 'var(--text-secondary)' }}>Giảm giá</span>
+                <span style={{ color: '#10b981' }}>-{formatCurrency(discount)}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-between font-bold text-lg pt-2" style={{ borderTop: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+            <span>TỔNG</span>
+            <span style={{ color: '#8b5cf6' }}>{formatCurrency(total)}</span>
           </div>
           <button onClick={() => setCheckoutOpen(true)}
             disabled={!cart.length}
-            className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-base disabled:opacity-40 disabled:cursor-not-allowed">
+            className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-base disabled:opacity-40 disabled:cursor-not-allowed mt-3">
             <CreditCard size={18} /> Thanh toán
           </button>
         </div>
@@ -541,6 +587,7 @@ export default function POSPage() {
           subtotal={subtotal}
           total={total}
           discount={discount}
+          tax={tax}
           itemCount={itemCount}
           onClose={handleCloseCheckout}
           onSubmit={handleCheckout}
