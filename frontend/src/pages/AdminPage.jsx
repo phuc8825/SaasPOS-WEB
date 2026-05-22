@@ -174,7 +174,7 @@ export default function AdminPage() {
         style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+            style={{ background: '#3b82f6' }}>
             <ShieldCheck size={18} className="text-white" />
           </div>
           <div>
@@ -202,7 +202,7 @@ export default function AdminPage() {
       <div className="px-6 pt-5">
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
-            { icon: Store, label: 'Tổng số shop', value: tenants.length, color: '#8b5cf6' },
+            { icon: Store, label: 'Tổng số shop', value: tenants.length, color: '#3b82f6' },
             { icon: Users, label: 'Tổng tài khoản', value: tenants.reduce((s, t) => s + (t.users?.length || 0), 0), color: '#06b6d4' },
             { icon: Package, label: 'Hoạt động', value: tenants.length, color: '#10b981' },
           ].map(({ icon: Icon, label, value, color }) => (
@@ -249,7 +249,7 @@ export default function AdminPage() {
                         {tenant.name}
                       </span>
                       <span className="badge text-xs font-mono"
-                        style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6' }}>
+                        style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
                         {tenant.slug}
                       </span>
                     </div>
@@ -279,7 +279,7 @@ export default function AdminPage() {
                     {statsMap[tenant.id] && (
                       <div className="grid grid-cols-4 gap-0" style={{ borderBottom: '1px solid var(--border)' }}>
                         {[
-                          { icon: Package, label: 'Sản phẩm', value: statsMap[tenant.id].products, color: '#8b5cf6' },
+                          { icon: Package, label: 'Sản phẩm', value: statsMap[tenant.id].products, color: '#3b82f6' },
                           { icon: Users, label: 'Tài khoản', value: statsMap[tenant.id].users, color: '#06b6d4' },
                           { icon: Receipt, label: 'Đơn hàng', value: statsMap[tenant.id].transactions, color: '#f59e0b' },
                           { icon: DollarSign, label: 'Doanh thu', value: formatCurrency(statsMap[tenant.id].totalRevenue), color: '#10b981' },
@@ -305,7 +305,7 @@ export default function AdminPage() {
                         </div>
                         <button onClick={() => openCreateUser(tenant)}
                           className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg transition-colors"
-                          style={{ background: 'rgba(124,58,237,0.1)', color: '#8b5cf6' }}>
+                          style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
                           <Plus size={13} /> Thêm tài khoản
                         </button>
                       </div>
@@ -316,7 +316,7 @@ export default function AdminPage() {
                             style={{ background: 'var(--bg-secondary)' }}>
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                                style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                                style={{ background: '#3b82f6' }}>
                                 {u.username[0].toUpperCase()}
                               </div>
                               <div className="min-w-0">
@@ -332,7 +332,7 @@ export default function AdminPage() {
                               <button onClick={() => openEditUser(tenant, u)}
                                 className="p-1.5 rounded-lg transition-colors hover:opacity-70"
                                 title="Sửa"
-                                style={{ color: '#8b5cf6', background: 'rgba(124,58,237,0.1)' }}>
+                                style={{ color: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)' }}>
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -371,7 +371,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                  style={{ background: '#3b82f6' }}>
                   <Store size={18} className="text-white" />
                 </div>
                 <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -387,7 +387,7 @@ export default function AdminPage() {
             {/* Shop info section */}
             <div className="mb-5">
               <div className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5"
-                style={{ color: '#8b5cf6' }}>
+                style={{ color: '#3b82f6' }}>
                 <Store size={12} /> Thông tin shop
               </div>
               <div className="space-y-3">

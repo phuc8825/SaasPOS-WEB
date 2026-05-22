@@ -82,12 +82,12 @@ export default function TransactionsPage() {
                 <button onClick={() => setExpanded(expanded === t.id ? null : t.id)}
                   className="w-full flex items-center gap-4 p-4 text-left hover:opacity-80 transition-opacity">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(139,92,246,0.1)' }}>
-                    <Receipt size={18} style={{ color: '#8b5cf6' }} />
+                    style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+                    <Receipt size={18} style={{ color: '#3b82f6' }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono font-semibold text-sm" style={{ color: '#8b5cf6' }}>{t.transaction_code}</span>
+                      <span className="font-mono font-semibold text-sm" style={{ color: '#3b82f6' }}>{t.transaction_code}</span>
                       <span className="badge text-xs" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>✓ Hoàn thành</span>
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
@@ -119,13 +119,8 @@ export default function TransactionsPage() {
                       ))}
                       <div className="flex justify-between pt-2 font-bold" style={{ borderTop: '1px dashed var(--border)', color: 'var(--text-primary)' }}>
                         <span>TỔNG</span>
-                        <span style={{ color: '#8b5cf6' }}>{formatCurrency(t.total)}</span>
+                        <span style={{ color: '#3b82f6' }}>{formatCurrency(t.total)}</span>
                       </div>
-                      {t.customer_email && (
-                        <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                          📧 {t.customer_email} {t.receipt_sent ? '· Đã gửi hóa đơn' : ''}
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}

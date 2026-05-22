@@ -1,20 +1,13 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext } from 'react'
 
 const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
-  const [dark, setDark] = useState(() => {
-    return localStorage.getItem('pos_theme') === 'dark' || 
-      (!localStorage.getItem('pos_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  })
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('pos_theme', dark ? 'dark' : 'light')
-  }, [dark])
+  // Always use light theme (white tone)
+  const dark = false
 
   return (
-    <ThemeContext.Provider value={{ dark, toggle: () => setDark(d => !d) }}>
+    <ThemeContext.Provider value={{ dark, toggle: () => {} }}>
       {children}
     </ThemeContext.Provider>
   )

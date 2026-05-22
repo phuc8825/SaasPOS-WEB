@@ -44,7 +44,7 @@ const buildReceiptHTML = (transaction, tenant) => {
     customerRows.push(`<tr><td style="padding:4px 0;font-size:13px;color:#888;">Email</td><td style="padding:4px 0;font-size:13px;color:#2d2d3a;">${transaction.customer_email}</td></tr>`);
   }
 
-  const paymentLabel = { cash: '💵 Tiền mặt', card: '💳 Thẻ ngân hàng', transfer: '🏦 Chuyển khoản' };
+  const paymentLabel = { cash: 'Tiền mặt', card: '💳 Thẻ ngân hàng', transfer: '🏦 Chuyển khoản' };
 
   return `
 <!DOCTYPE html>
@@ -73,15 +73,15 @@ const buildReceiptHTML = (transaction, tenant) => {
     </div>
 
     <!-- Transaction meta -->
-    <div style="padding:20px 32px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #f0f0f8;gap:16px;">
+    <div style="padding:20px 32px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #f0f0f8;">
       <div>
         <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Mã hóa đơn</div>
         <div style="font-size:17px;font-weight:700;color:#1a1a2e;font-family:monospace;letter-spacing:1px;">${transaction.transaction_code}</div>
       </div>
-      <div style="text-align:right;">
+      <div style="text-align:right;flex:1;padding-left:60px;">
         <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Thời gian</div>
-        <div style="font-size:13px;color:#444;">${formatDate(transaction.created_at)}</div>
-        <div style="margin-top:6px;display:inline-block;background:#f0eeff;color:#7c3aed;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">
+        <div style="font-size:13px;color:#444;margin-bottom:8px;">${formatDate(transaction.created_at)}</div>
+        <div style="display:inline-block;background:#f0eeff;color:#7c3aed;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">
           ${paymentLabel[transaction.payment_method] || transaction.payment_method}
         </div>
       </div>
@@ -129,14 +129,14 @@ const buildReceiptHTML = (transaction, tenant) => {
         </table>
         <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#1a1a2e,#2d1b69);padding:18px 20px;border-radius:14px;margin-top:14px;">
           <span style="color:#fff;font-size:16px;font-weight:700;">TỔNG CỘNG</span>
-          <span style="color:#c4b5fd;font-size:24px;font-weight:800;">${formatCurrency(transaction.total)}</span>
+          <span style="color:#c4b5fd;font-size:24px;font-weight:800;text-align:right;">${formatCurrency(transaction.total)}</span>
         </div>
       </div>
     </div>
 
     <!-- Footer -->
     <div style="background:#f8f7ff;padding:20px 32px;text-align:center;border-top:1px solid #eeeeff;">
-      <p style="margin:0;color:#888;font-size:13px;">Cảm ơn quý khách đã mua sắm tại <strong style="color:#7c3aed;">${tenant.name}</strong> 🙏</p>
+      <p style="margin:0;color:#888;font-size:13px;">Cảm ơn quý khách đã mua sắm tại <strong style="color:#7c3aed;">${tenant.name}</strong></p>
       <p style="margin:8px 0 0;color:#bbb;font-size:11px;">Hóa đơn được tạo tự động · Vui lòng giữ để đổi/trả hàng trong 7 ngày</p>
     </div>
   </div>

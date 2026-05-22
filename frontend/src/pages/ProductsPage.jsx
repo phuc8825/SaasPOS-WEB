@@ -126,19 +126,19 @@ export default function ProductsPage() {
                   )}
                 </div>
                 {p.category && (
-                  <div className="text-xs mb-1.5 font-medium" style={{ color: '#8b5cf6' }}>{p.category}</div>
+                  <div className="text-xs mb-1.5 font-medium" style={{ color: '#3b82f6' }}>{p.category}</div>
                 )}
                 <div className="font-semibold text-sm mb-1 leading-tight" style={{ color: 'var(--text-primary)' }}>{p.name}</div>
                 {p.description && (
                   <div className="text-xs mb-2 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{p.description}</div>
                 )}
-                <div className="font-bold text-base" style={{ color: '#8b5cf6' }}>{formatCurrency(p.price)}</div>
+                <div className="font-bold text-base" style={{ color: '#3b82f6' }}>{formatCurrency(p.price)}</div>
 
                 {isAdmin && (
                   <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => openEdit(p)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                      style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6' }}>
+                      style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
                       <Edit2 size={12} /> Sửa
                     </button>
                     <button onClick={() => setDeleteId(p.id)}

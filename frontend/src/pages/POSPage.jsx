@@ -4,20 +4,17 @@ import { useAuth } from '../contexts/AuthContext'
 import { formatCurrency } from '../utils/format'
 import {
   Search, ShoppingCart, Plus, Minus, Trash2, Package,
-  CreditCard, Banknote, Building2, Mail, User, Phone,
-  X, Receipt, CheckCircle, AlertCircle
+  CreditCard, Banknote, Building2, User, Phone,
+  X, Receipt, CheckCircle, AlertCircle, Mail, AtSign
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-
 const PAYMENT_METHODS = [
   { value: 'cash', label: 'Tiền mặt', icon: Banknote },
   { value: 'card', label: 'Thẻ', icon: CreditCard },
   { value: 'transfer', label: 'Chuyển khoản', icon: Building2 },
 ]
 
-// ─────────────────────────────────────────────────────────────
 // InputField tách ra NGOÀI hoàn toàn để tránh re-mount mỗi render
-// ─────────────────────────────────────────────────────────────
 const InputField = ({ label, icon: Icon, field, type = 'text', placeholder, required, value, onChange, error }) => (
   <div>
     <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
@@ -84,8 +81,8 @@ const CheckoutModal = memo(function CheckoutModal({
               error={errors.customerPhone}
             />
             <InputField
-              label="Email nhận hóa đơn" icon={Mail} field="customerEmail"
-              type="email" placeholder="khach@email.com" required
+              label="Email" icon={AtSign} field="customerEmail"
+              type="email" placeholder="abc@example.com" required
               value={checkoutForm.customerEmail}
               onChange={onFieldChange}
               error={errors.customerEmail}
@@ -107,9 +104,9 @@ const CheckoutModal = memo(function CheckoutModal({
                 onClick={() => onFieldChange('paymentMethod', value)}
                 className="flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs font-medium transition-all"
                 style={{
-                  background: checkoutForm.paymentMethod === value ? 'rgba(124,58,237,0.12)' : 'var(--bg-secondary)',
-                  border: `1.5px solid ${checkoutForm.paymentMethod === value ? '#8b5cf6' : 'var(--border)'}`,
-                  color: checkoutForm.paymentMethod === value ? '#8b5cf6' : 'var(--text-secondary)',
+                  background: checkoutForm.paymentMethod === value ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-secondary)',
+                  border: `1.5px solid ${checkoutForm.paymentMethod === value ? '#3b82f6' : 'var(--border)'}`,
+                  color: checkoutForm.paymentMethod === value ? '#3b82f6' : 'var(--text-secondary)',
                 }}>
                 <Icon size={18} />
                 {label}
@@ -169,13 +166,13 @@ const CheckoutModal = memo(function CheckoutModal({
           <div className="flex justify-between font-bold text-lg pt-1.5"
             style={{ borderTop: '1px solid var(--border)', color: 'var(--text-primary)' }}>
             <span>TỔNG</span>
-            <span style={{ color: '#8b5cf6' }}>{formatCurrency(total)}</span>
+            <span style={{ color: '#3b82f6' }}>{formatCurrency(total)}</span>
           </div>
         </div>
 
         {/* Email note */}
         <div className="flex items-start gap-2 text-xs mb-5 px-3 py-2.5 rounded-xl"
-          style={{ background: 'rgba(139,92,246,0.08)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.15)' }}>
+          style={{ background: 'rgba(59, 130, 246, 0.08)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.15)' }}>
           <Mail size={13} className="flex-shrink-0 mt-0.5" />
           <span>Hóa đơn sẽ được gửi tự động đến email khách hàng sau khi thanh toán</span>
         </div>
@@ -207,7 +204,7 @@ const ReceiptModal = memo(function ReceiptModal({ transaction, tenant, onClose }
             <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
               Thanh toán thành công!
             </h2>
-            <code className="text-sm font-semibold" style={{ color: '#8b5cf6' }}>
+            <code className="text-sm font-semibold" style={{ color: '#3b82f6' }}>
               {transaction.transaction_code}
             </code>
           </div>
@@ -231,12 +228,6 @@ const ReceiptModal = memo(function ReceiptModal({ transaction, tenant, onClose }
                 <div className="flex items-center gap-2 text-sm">
                   <Phone size={13} style={{ color: 'var(--text-secondary)' }} />
                   <span style={{ color: 'var(--text-primary)' }}>{transaction.customer_phone}</span>
-                </div>
-              )}
-              {transaction.customer_email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail size={13} style={{ color: 'var(--text-secondary)' }} />
-                  <span style={{ color: 'var(--text-primary)' }}>{transaction.customer_email}</span>
                 </div>
               )}
             </div>
@@ -276,17 +267,9 @@ const ReceiptModal = memo(function ReceiptModal({ transaction, tenant, onClose }
             <div className="flex justify-between font-bold text-lg pt-2"
               style={{ borderTop: '1px solid var(--border)', color: 'var(--text-primary)' }}>
               <span>TỔNG CỘNG</span>
-              <span style={{ color: '#8b5cf6' }}>{formatCurrency(transaction.total)}</span>
+              <span style={{ color: '#3b82f6' }}>{formatCurrency(transaction.total)}</span>
             </div>
           </div>
-
-          {transaction.receipt_sent && (
-            <div className="mt-4 flex items-center gap-2 text-xs px-3 py-2.5 rounded-xl"
-              style={{ background: 'rgba(16,185,129,0.08)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }}>
-              <Mail size={14} />
-              <span>Hóa đơn đã gửi đến <strong>{transaction.customer_email}</strong></span>
-            </div>
-          )}
 
           <button onClick={onClose} className="btn-primary w-full mt-5">Đóng</button>
         </div>
@@ -374,11 +357,8 @@ export default function POSPage() {
     const errs = {}
     if (!checkoutForm.customerName.trim()) errs.customerName = 'Vui lòng nhập họ tên'
     if (!checkoutForm.customerPhone.trim()) errs.customerPhone = 'Vui lòng nhập số điện thoại'
-    if (!checkoutForm.customerEmail.trim()) {
-      errs.customerEmail = 'Vui lòng nhập email để nhận hóa đơn'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutForm.customerEmail)) {
-      errs.customerEmail = 'Email không hợp lệ'
-    }
+    if (!checkoutForm.customerEmail.trim()) errs.customerEmail = 'Vui lòng nhập email'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutForm.customerEmail)) errs.customerEmail = 'Email không hợp lệ'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -403,10 +383,7 @@ export default function POSPage() {
       clearCart()
       setCheckoutForm({ customerName: '', customerPhone: '', customerEmail: '', paymentMethod: 'cash', discount: 0, tax: '' })
       setErrors({})
-      toast.success('Thanh toán thành công! 🎉')
-      if (transaction.receipt_sent) {
-        toast.success(`📧 Hóa đơn gửi đến ${checkoutForm.customerEmail}`, { duration: 4000 })
-      }
+      toast.success('Thanh toán thành công!')
     } catch (e) {
       toast.error(e.response?.data?.message || 'Thanh toán thất bại')
     } finally { setProcessing(false) }
@@ -436,7 +413,7 @@ export default function POSPage() {
             <button key={c} onClick={() => setFilterCat(c)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-all"
               style={{
-                background: filterCat === c ? 'linear-gradient(135deg,#7c3aed,#6d28d9)' : 'var(--bg-secondary)',
+                background: filterCat === c ? 'linear-gradient(135deg,#3b82f6,#1d4ed8)' : 'var(--bg-secondary)',
                 color: filterCat === c ? 'white' : 'var(--text-secondary)',
               }}>
               {c || 'Tất cả'}
@@ -462,14 +439,14 @@ export default function POSPage() {
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded-xl"
                       style={{ background: 'rgba(124,58,237,0.18)' }}>
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-                        style={{ background: '#7c3aed' }}>
+                        style={{ background: '#3b82f6' }}>
                         <Plus size={18} />
                       </div>
                     </div>
                   </div>
-                  {p.category && <div className="text-xs font-medium mb-0.5" style={{ color: '#a78bfa' }}>{p.category}</div>}
+                  {p.category && <div className="text-xs font-medium mb-0.5" style={{ color: '#60a5fa' }}>{p.category}</div>}
                   <div className="text-sm font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>{p.name}</div>
-                  <div className="font-bold text-sm mt-1" style={{ color: '#8b5cf6' }}>{formatCurrency(p.price)}</div>
+                  <div className="font-bold text-sm mt-1" style={{ color: '#3b82f6' }}>{formatCurrency(p.price)}</div>
                 </button>
               ))}
               {!products.length && (
@@ -489,11 +466,11 @@ export default function POSPage() {
         <div className="p-4 flex items-center justify-between flex-shrink-0"
           style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2">
-            <ShoppingCart size={18} style={{ color: '#8b5cf6' }} />
+            <ShoppingCart size={18} style={{ color: '#3b82f6' }} />
             <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Giỏ hàng</span>
             {itemCount > 0 && (
               <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white"
-                style={{ background: '#8b5cf6' }}>{itemCount}</span>
+                style={{ background: '#3b82f6' }}>{itemCount}</span>
             )}
           </div>
           {cart.length > 0 && (
@@ -519,7 +496,7 @@ export default function POSPage() {
                 style={{ background: 'var(--bg-secondary)' }}>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{item.name}</div>
-                  <div className="text-xs font-semibold mt-0.5" style={{ color: '#8b5cf6' }}>{formatCurrency(item.price)}</div>
+                  <div className="text-xs font-semibold mt-0.5" style={{ color: '#3b82f6' }}>{formatCurrency(item.price)}</div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button onClick={() => updateQty(item.id, -1)}
@@ -532,7 +509,7 @@ export default function POSPage() {
                   </span>
                   <button onClick={() => updateQty(item.id, 1)}
                     className="w-6 h-6 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>
+                    style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6' }}>
                     <Plus size={11} />
                   </button>
                   <button onClick={() => removeItem(item.id)}
@@ -568,7 +545,7 @@ export default function POSPage() {
           </div>
           <div className="flex justify-between font-bold text-lg pt-2" style={{ borderTop: '1px solid var(--border)', color: 'var(--text-primary)' }}>
             <span>TỔNG</span>
-            <span style={{ color: '#8b5cf6' }}>{formatCurrency(total)}</span>
+            <span style={{ color: '#3b82f6' }}>{formatCurrency(total)}</span>
           </div>
           <button onClick={() => setCheckoutOpen(true)}
             disabled={!cart.length}

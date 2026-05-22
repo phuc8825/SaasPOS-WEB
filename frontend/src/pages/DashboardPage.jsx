@@ -73,7 +73,7 @@ export default function DashboardPage() {
               <button key={p.value} onClick={() => setPeriod(p.value)}
                 className="px-3 py-2 text-xs font-medium transition-all"
                 style={{
-                  background: period === p.value ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : 'var(--bg-card)',
+                  background: period === p.value ? '#3b82f6' : 'var(--bg-card)',
                   color: period === p.value ? 'white' : 'var(--text-secondary)',
                 }}>
                 {p.label}
@@ -100,7 +100,7 @@ export default function DashboardPage() {
           </div>
         ) : stats && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={DollarSign} label="Tổng doanh thu" value={formatCurrency(stats.totalRevenue)} color="#8b5cf6" />
+            <StatCard icon={DollarSign} label="Tổng doanh thu" value={formatCurrency(stats.totalRevenue)} color="#3b82f6" />
             <StatCard icon={ShoppingBag} label="Số hóa đơn" value={stats.totalOrders.toLocaleString()} color="#06b6d4" />
             <StatCard icon={TrendingUp} label="Trung bình/đơn" value={formatCurrency(stats.avgOrderValue)} color="#10b981" />
             <StatCard icon={Package} label="Sản phẩm" value={stats.totalProducts.toLocaleString()} color="#f59e0b" subtitle="đang hoạt động" />
@@ -123,7 +123,7 @@ export default function DashboardPage() {
                     <div className="w-full rounded-t-lg transition-all relative overflow-hidden"
                       style={{
                         height: `${Math.max((day.revenue / maxRev) * 120, day.revenue > 0 ? 8 : 2)}px`,
-                        background: day.revenue > 0 ? 'linear-gradient(180deg, #8b5cf6, #6d28d9)' : 'var(--border)',
+                        background: day.revenue > 0 ? 'linear-gradient(180deg, #3b82f6, #1d4ed8)' : 'var(--border)',
                         minHeight: '4px',
                       }} />
                     <div className="text-xs" style={{ color: 'var(--text-secondary)', fontSize: '10px' }}>{day.date}</div>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                     <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{product.name}</div>
                     <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{product.quantity} cái</div>
                   </div>
-                  <div className="text-xs font-semibold" style={{ color: '#8b5cf6' }}>
+                  <div className="text-xs font-semibold" style={{ color: '#3b82f6' }}>
                     {formatCurrency(product.revenue)}
                   </div>
                 </div>
@@ -181,14 +181,14 @@ export default function DashboardPage() {
                 {recent.map(t => (
                   <tr key={t.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td className="py-3 pr-4">
-                      <span className="font-mono text-xs font-semibold" style={{ color: '#8b5cf6' }}>{t.transaction_code}</span>
+                      <span className="font-mono text-xs font-semibold" style={{ color: '#3b82f6' }}>{t.transaction_code}</span>
                     </td>
                     <td className="py-3 pr-4 text-sm" style={{ color: 'var(--text-primary)' }}>
                       {t.customer_name || <span style={{ color: 'var(--text-secondary)' }}>Khách lẻ</span>}
                     </td>
                     <td className="py-3 pr-4">
-                      <span className="badge" style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6' }}>
-                        {t.payment_method === 'cash' ? '💵 Tiền mặt' : t.payment_method === 'card' ? '💳 Thẻ' : '🏦 Chuyển khoản'}
+                      <span className="badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                    {t.payment_method === 'cash' ? 'Tiền mặt' : t.payment_method === 'card' ? 'Thẻ' : 'Chuyển khoản'}
                       </span>
                     </td>
                     <td className="py-3 pr-4 font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
