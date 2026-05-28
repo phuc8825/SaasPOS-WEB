@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const supabase = require('../config/supabase');
+const db = require('../config/db');
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -11,14 +11,13 @@ const authMiddleware = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, tenant_id, username, role, is_active')
-      .eq('id', decoded.userId)
-      .eq('tenant_id', decoded.tenantId)
-      .single();
+    const resUser = await db.query(
+      'SELECT id, tenant_id, username, role, is_active FROM users WHERE id = $1 AND tenant_id = $2',
+      [decoded.userId, decoded.tenantId]
+    );
+    const user = resUser.rows[0];
 
-    if (error || !user || !user.is_active) {
+    if (!user || !user.is_active) {
       return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 

@@ -1,92 +1,95 @@
-const supabase = require('../config/supabase');
+const db = require('../config/db');
 
 const productService = {
   async getAll(tenantId, { search, category, page = 1, limit = 50 } = {}) {
-    let query = supabase
-      .from('products')
-      .select('*', { count: 'exact' })
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true)
-      .order('name');
+    const values = [tenantId];
+    let idx = 2;
+    let where = 'WHERE tenant_id = $1 AND is_active = true';
 
     if (search) {
-      query = query.ilike('name', `%${search}%`);
+      where += ` AND name ILIKE $${idx++}`;
+      values.push(`%${search}%`);
     }
     if (category) {
-      query = query.eq('category', category);
+      where += ` AND category = $${idx++}`;
+      values.push(category);
     }
 
-    const from = (page - 1) * limit;
-    query = query.range(from, from + limit - 1);
+    const countRes = await db.query(`SELECT count(*) FROM products ${where}`, values);
+    const count = parseInt(countRes.rows[0].count);
 
-    const { data, error, count } = await query;
-    if (error) throw new Error(error.message);
-    return { products: data, total: count, page, limit };
+    const offset = (page - 1) * limit;
+    const query = `
+      SELECT * FROM products 
+      ${where} 
+      ORDER BY name 
+      LIMIT $${idx++} OFFSET $${idx++}
+    `;
+    values.push(limit);
+    values.push(offset);
+
+    const res = await db.query(query, values);
+    return { products: res.rows, total: count, page, limit };
   },
 
   async getById(tenantId, productId) {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .eq('tenant_id', tenantId)
-      .single();
-
-    if (error) throw new Error('Product not found');
-    return data;
+    const res = await db.query(
+      'SELECT * FROM products WHERE id = $1 AND tenant_id = $2',
+      [productId, tenantId]
+    );
+    if (res.rows.length === 0) throw new Error('Product not found');
+    return res.rows[0];
   },
 
   async create(tenantId, productData) {
-    const { data, error } = await supabase
-      .from('products')
-      .insert({ ...productData, tenant_id: tenantId })
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return data;
+    const { name, description, price, category, stock_quantity, image_url } = productData;
+    const res = await db.query(
+      'INSERT INTO products (tenant_id, name, description, price, category, stock_quantity, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [tenantId, name, description, price, category, stock_quantity, image_url]
+    );
+    return res.rows[0];
   },
 
   async update(tenantId, productId, productData) {
-    const { data, error } = await supabase
-      .from('products')
-      .update(productData)
-      .eq('id', productId)
-      .eq('tenant_id', tenantId)
-      .select()
-      .single();
+    const { name, description, price, category, stock_quantity, image_url, is_active } = productData;
+    const fields = [];
+    const values = [];
+    let idx = 1;
 
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error('Product not found');
-    return data;
+    if (name !== undefined) { fields.push(`name = $${idx++}`); values.push(name); }
+    if (description !== undefined) { fields.push(`description = $${idx++}`); values.push(description); }
+    if (price !== undefined) { fields.push(`price = $${idx++}`); values.push(price); }
+    if (category !== undefined) { fields.push(`category = $${idx++}`); values.push(category); }
+    if (stock_quantity !== undefined) { fields.push(`stock_quantity = $${idx++}`); values.push(stock_quantity); }
+    if (image_url !== undefined) { fields.push(`image_url = $${idx++}`); values.push(image_url); }
+    if (is_active !== undefined) { fields.push(`is_active = $${idx++}`); values.push(is_active); }
+
+    if (fields.length === 0) return this.getById(tenantId, productId);
+
+    values.push(productId);
+    values.push(tenantId);
+    const query = `UPDATE products SET ${fields.join(', ')} WHERE id = $${idx} AND tenant_id = $${idx + 1} RETURNING *`;
+    const res = await db.query(query, values);
+    if (res.rows.length === 0) throw new Error('Product not found');
+    return res.rows[0];
   },
 
   async delete(tenantId, productId) {
     // Soft delete
-    const { data, error } = await supabase
-      .from('products')
-      .update({ is_active: false })
-      .eq('id', productId)
-      .eq('tenant_id', tenantId)
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error('Product not found');
+    const res = await db.query(
+      'UPDATE products SET is_active = false WHERE id = $1 AND tenant_id = $2 RETURNING *',
+      [productId, tenantId]
+    );
+    if (res.rows.length === 0) throw new Error('Product not found');
     return true;
   },
 
   async getCategories(tenantId) {
-    const { data, error } = await supabase
-      .from('products')
-      .select('category')
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true)
-      .not('category', 'is', null);
-
-    if (error) throw new Error(error.message);
-    const categories = [...new Set(data.map((p) => p.category).filter(Boolean))];
-    return categories;
+    const res = await db.query(
+      'SELECT DISTINCT category FROM products WHERE tenant_id = $1 AND is_active = true AND category IS NOT NULL',
+      [tenantId]
+    );
+    return res.rows.map((r) => r.category);
   },
 };
 

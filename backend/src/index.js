@@ -57,11 +57,20 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+const db = require('./config/db');
+
+app.listen(PORT, async () => {
   console.log(`\n🚀 SaaS POS Backend running on http://localhost:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  try {
+    const res = await db.query('SELECT NOW()');
+    console.log(`🗄️  Database (RDS): ✓ connected (${res.rows[0].now})`);
+  } catch (err) {
+    console.log(`🗄️  Database (RDS): ✗ connection FAILED: ${err.message}`);
+  }
+
   console.log(`🔒 JWT Secret: ${process.env.JWT_SECRET ? '✓ configured' : '✗ MISSING!'}`);
-  console.log(`🗄️  Supabase: ${process.env.SUPABASE_URL ? '✓ configured' : '✗ MISSING!'}`);
   console.log(`📧 Email: ${process.env.EMAIL_USER ? '✓ configured' : '⚠ not configured'}\n`);
 });
 

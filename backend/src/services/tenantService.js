@@ -1,24 +1,50 @@
 const bcrypt = require('bcrypt');
-const supabase = require('../config/supabase');
+const db = require('../config/db');
 
 const tenantService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select(`*, users(id, username, email, role, is_active)`)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data;
+    const query = `
+      SELECT t.*, 
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id', u.id, 
+            'username', u.username, 
+            'email', u.email, 
+            'role', u.role, 
+            'is_active', u.is_active
+          )) 
+          FROM users u 
+          WHERE u.tenant_id = t.id), 
+          '[]'::json
+        ) as users
+      FROM tenants t
+      ORDER BY t.created_at DESC
+    `;
+    const res = await db.query(query);
+    return res.rows;
   },
 
   async getById(tenantId) {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select(`*, users(id, username, email, role, is_active)`)
-      .eq('id', tenantId)
-      .single();
-    if (error) throw new Error('Tenant not found');
-    return data;
+    const query = `
+      SELECT t.*, 
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id', u.id, 
+            'username', u.username, 
+            'email', u.email, 
+            'role', u.role, 
+            'is_active', u.is_active
+          )) 
+          FROM users u 
+          WHERE u.tenant_id = t.id), 
+          '[]'::json
+        ) as users
+      FROM tenants t
+      WHERE t.id = $1
+    `;
+    const res = await db.query(query, [tenantId]);
+    if (res.rows.length === 0) throw new Error('Tenant not found');
+    return res.rows[0];
   },
 
   async create({ name, slug, email, phone, address, ownerUsername, ownerEmail, ownerPassword }) {
@@ -30,139 +56,133 @@ const tenantService = {
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-    const { data: existing } = await supabase
-      .from('tenants').select('id').eq('slug', generatedSlug).single();
-    if (existing) throw new Error('Slug đã tồn tại, hãy dùng tên khác');
+    const existingRes = await db.query('SELECT id FROM tenants WHERE slug = $1', [generatedSlug]);
+    if (existingRes.rows.length > 0) throw new Error('Slug đã tồn tại, hãy dùng tên khác');
 
-    const { data: tenant, error: tenantError } = await supabase
-      .from('tenants')
-      .insert({ name, slug: generatedSlug, email, phone, address })
-      .select().single();
-    if (tenantError) throw new Error(tenantError.message);
+    const client = await db.getClient();
+    try {
+      await client.query('BEGIN');
 
-    const passwordHash = await bcrypt.hash(ownerPassword, 10);
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .insert({
-        tenant_id: tenant.id,
-        username: ownerUsername,
-        email: ownerEmail || email,
-        password_hash: passwordHash,
-        role: 'admin',
-      })
-      .select('id, username, email, role')
-      .single();
+      const tenantRes = await client.query(
+        'INSERT INTO tenants (name, slug, email, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [name, generatedSlug, email, phone, address]
+      );
+      const tenant = tenantRes.rows[0];
 
-    if (userError) {
-      await supabase.from('tenants').delete().eq('id', tenant.id);
-      throw new Error(userError.message);
+      const passwordHash = await bcrypt.hash(ownerPassword, 10);
+      const userRes = await client.query(
+        'INSERT INTO users (tenant_id, username, email, password_hash, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role',
+        [tenant.id, ownerUsername, ownerEmail || email, passwordHash, 'admin']
+      );
+      const user = userRes.rows[0];
+
+      await client.query('COMMIT');
+      return { tenant, owner: user };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
-
-    return { tenant, owner: user };
   },
 
   async update(tenantId, data) {
     const { name, email, phone, address, logo_url } = data;
-    const updateData = {};
-    if (name !== undefined) updateData.name = name;
-    if (email !== undefined) updateData.email = email;
-    if (phone !== undefined) updateData.phone = phone;
-    if (address !== undefined) updateData.address = address;
-    if (logo_url !== undefined) updateData.logo_url = logo_url;
+    const fields = [];
+    const values = [];
+    let idx = 1;
 
-    const { data: updated, error } = await supabase
-      .from('tenants').update(updateData).eq('id', tenantId).select().single();
-    if (error) throw new Error(error.message);
-    return updated;
+    if (name !== undefined) { fields.push(`name = $${idx++}`); values.push(name); }
+    if (email !== undefined) { fields.push(`email = $${idx++}`); values.push(email); }
+    if (phone !== undefined) { fields.push(`phone = $${idx++}`); values.push(phone); }
+    if (address !== undefined) { fields.push(`address = $${idx++}`); values.push(address); }
+    if (logo_url !== undefined) { fields.push(`logo_url = $${idx++}`); values.push(logo_url); }
+
+    if (fields.length === 0) return this.getById(tenantId);
+
+    values.push(tenantId);
+    const query = `UPDATE tenants SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
+    const res = await db.query(query, values);
+    if (res.rows.length === 0) throw new Error('Tenant not found');
+    return res.rows[0];
   },
 
   async deleteTenant(tenantId) {
-    // Cascade delete users, products, transactions theo schema
-    const { error } = await supabase.from('tenants').delete().eq('id', tenantId);
-    if (error) throw new Error(error.message);
+    await db.query('DELETE FROM tenants WHERE id = $1', [tenantId]);
     return true;
   },
 
   async getStats(tenantId) {
-    const [productsRes, usersRes, transactionsRes] = await Promise.all([
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('is_active', true),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('is_active', true),
-      supabase.from('transactions').select('total').eq('tenant_id', tenantId).eq('status', 'completed'),
-    ]);
-    const totalRevenue = (transactionsRes.data || []).reduce((s, t) => s + parseFloat(t.total), 0);
+    const productsRes = await db.query('SELECT count(*) FROM products WHERE tenant_id = $1 AND is_active = true', [tenantId]);
+    const usersRes = await db.query('SELECT count(*) FROM users WHERE tenant_id = $1 AND is_active = true', [tenantId]);
+    const transactionsRes = await db.query('SELECT total FROM transactions WHERE tenant_id = $1 AND status = $2', [tenantId, 'completed']);
+
+    const totalRevenue = (transactionsRes.rows || []).reduce((s, t) => s + parseFloat(t.total), 0);
     return {
-      products: productsRes.count || 0,
-      users: usersRes.count || 0,
-      transactions: (transactionsRes.data || []).length,
+      products: parseInt(productsRes.rows[0].count) || 0,
+      users: parseInt(usersRes.rows[0].count) || 0,
+      transactions: transactionsRes.rows.length,
       totalRevenue,
     };
   },
 
   // ---- User management ----
   async getUsers(tenantId) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, username, email, role, is_active, created_at')
-      .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data;
+    const res = await db.query(
+      'SELECT id, username, email, role, is_active, created_at FROM users WHERE tenant_id = $1 ORDER BY created_at DESC',
+      [tenantId]
+    );
+    return res.rows;
   },
 
   async createUser(tenantId, { username, email, password, role = 'cashier' }) {
     if (!username || !password) throw new Error('Tên đăng nhập và mật khẩu là bắt buộc');
     if (!['admin', 'cashier'].includes(role)) throw new Error('Role không hợp lệ');
 
-    // Kiểm tra username trùng trong tenant
-    const { data: existing } = await supabase
-      .from('users').select('id').eq('tenant_id', tenantId).eq('username', username).single();
-    if (existing) throw new Error('Tên đăng nhập đã tồn tại trong shop này');
+    const existingRes = await db.query('SELECT id FROM users WHERE tenant_id = $1 AND username = $2', [tenantId, username]);
+    if (existingRes.rows.length > 0) throw new Error('Tên đăng nhập đã tồn tại trong shop này');
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const { data, error } = await supabase
-      .from('users')
-      .insert({ tenant_id: tenantId, username, email, password_hash: passwordHash, role })
-      .select('id, username, email, role, is_active, created_at')
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
+    const res = await db.query(
+      'INSERT INTO users (tenant_id, username, email, password_hash, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role, is_active, created_at',
+      [tenantId, username, email, passwordHash, role]
+    );
+    return res.rows[0];
   },
 
   async updateUser(tenantId, userId, { username, email, password, role, is_active }) {
-    const updateData = {};
-    if (username !== undefined) updateData.username = username;
-    if (email !== undefined) updateData.email = email;
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    if (username !== undefined) { fields.push(`username = $${idx++}`); values.push(username); }
+    if (email !== undefined) { fields.push(`email = $${idx++}`); values.push(email); }
     if (role !== undefined) {
       if (!['admin', 'cashier'].includes(role)) throw new Error('Role không hợp lệ');
-      updateData.role = role;
+      fields.push(`role = $${idx++}`); values.push(role);
     }
-    if (is_active !== undefined) updateData.is_active = is_active;
+    if (is_active !== undefined) { fields.push(`is_active = $${idx++}`); values.push(is_active); }
     if (password) {
-      updateData.password_hash = await bcrypt.hash(password, 10);
+      const passwordHash = await bcrypt.hash(password, 10);
+      fields.push(`password_hash = $${idx++}`); values.push(passwordHash);
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update(updateData)
-      .eq('id', userId)
-      .eq('tenant_id', tenantId)
-      .select('id, username, email, role, is_active, created_at')
-      .single();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error('User not found');
-    return data;
+    if (fields.length === 0) {
+      const res = await db.query('SELECT id, username, email, role, is_active, created_at FROM users WHERE id = $1 AND tenant_id = $2', [userId, tenantId]);
+      return res.rows[0];
+    }
+
+    values.push(userId);
+    values.push(tenantId);
+    const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${idx} AND tenant_id = $${idx + 1} RETURNING id, username, email, role, is_active, created_at`;
+    const res = await db.query(query, values);
+    if (res.rows.length === 0) throw new Error('User not found');
+    return res.rows[0];
   },
 
   async deleteUser(tenantId, userId) {
-    const { data, error } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', userId)
-      .eq('tenant_id', tenantId)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error('User not found');
+    const res = await db.query('DELETE FROM users WHERE id = $1 AND tenant_id = $2 RETURNING id', [userId, tenantId]);
+    if (res.rows.length === 0) throw new Error('User not found');
     return true;
   },
 
@@ -171,16 +191,12 @@ const tenantService = {
       throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
     }
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    const { data, error } = await supabase
-      .from('users')
-      .update({ password_hash: passwordHash })
-      .eq('id', userId)
-      .eq('tenant_id', tenantId)
-      .select('id, username, email, role')
-      .single();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error('User not found');
-    return data;
+    const res = await db.query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2 AND tenant_id = $3 RETURNING id, username, email, role',
+      [passwordHash, userId, tenantId]
+    );
+    if (res.rows.length === 0) throw new Error('User not found');
+    return res.rows[0];
   },
 };
 

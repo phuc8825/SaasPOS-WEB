@@ -1,4 +1,4 @@
-const supabase = require('../config/supabase');
+const db = require('../config/db');
 
 const dashboardService = {
   async getStats(tenantId, period = 'today') {
@@ -32,28 +32,25 @@ const dashboardService = {
     }
 
     // Transactions in period
-    const { data: transactions, error } = await supabase
-      .from('transactions')
-      .select('id, total, created_at, status')
-      .eq('tenant_id', tenantId)
-      .eq('status', 'completed')
-      .gte('created_at', startDate.toISOString())
-      .lt('created_at', endDate.toISOString());
-
-    if (error) throw new Error(error.message);
+    const txRes = await db.query(
+      'SELECT id, total, created_at, status FROM transactions WHERE tenant_id = $1 AND status = $2 AND created_at >= $3 AND created_at < $4',
+      [tenantId, 'completed', startDate.toISOString(), endDate.toISOString()]
+    );
+    const transactions = txRes.rows;
 
     const totalRevenue = transactions.reduce((sum, t) => sum + parseFloat(t.total), 0);
     const totalOrders = transactions.length;
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     // Top products
-    const { data: topItems } = await supabase
-      .from('transaction_items')
-      .select('product_name, quantity, subtotal, transactions!inner(tenant_id, status, created_at)')
-      .eq('transactions.tenant_id', tenantId)
-      .eq('transactions.status', 'completed')
-      .gte('transactions.created_at', startDate.toISOString())
-      .lt('transactions.created_at', endDate.toISOString());
+    const itemsRes = await db.query(
+      `SELECT ti.product_name, ti.quantity, ti.subtotal 
+       FROM transaction_items ti 
+       JOIN transactions t ON ti.transaction_id = t.id 
+       WHERE t.tenant_id = $1 AND t.status = $2 AND t.created_at >= $3 AND t.created_at < $4`,
+      [tenantId, 'completed', startDate.toISOString(), endDate.toISOString()]
+    );
+    const topItems = itemsRes.rows;
 
     const productStats = {};
     (topItems || []).forEach((item) => {
@@ -91,11 +88,11 @@ const dashboardService = {
     }
 
     // Total products count
-    const { count: totalProducts } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .eq('is_active', true);
+    const prodCountRes = await db.query(
+      'SELECT count(*) FROM products WHERE tenant_id = $1 AND is_active = true',
+      [tenantId]
+    );
+    const totalProducts = parseInt(prodCountRes.rows[0].count);
 
     return {
       totalRevenue,
@@ -109,15 +106,11 @@ const dashboardService = {
   },
 
   async getRecentTransactions(tenantId, limit = 5) {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('id, transaction_code, total, customer_name, payment_method, created_at, status')
-      .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw new Error(error.message);
-    return data;
+    const res = await db.query(
+      'SELECT id, transaction_code, total, customer_name, payment_method, created_at, status FROM transactions WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT $2',
+      [tenantId, limit]
+    );
+    return res.rows;
   },
 };
 

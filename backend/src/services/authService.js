@@ -1,16 +1,15 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const supabase = require('../config/supabase');
+const db = require('../config/db');
 
 const authService = {
   async login(username, password) {
     // 1. Thử tìm trong bảng super_admins trước
-    const { data: superAdmin, error: superAdminError } = await supabase
-      .from('super_admins')
-      .select('id, username, email, password_hash, is_active')
-      .eq('username', username)
-      .eq('is_active', true)
-      .single();
+    const superAdminRes = await db.query(
+      'SELECT id, username, email, password_hash, is_active FROM super_admins WHERE username = $1 AND is_active = true',
+      [username]
+    );
+    const superAdmin = superAdminRes.rows[0];
 
     if (superAdmin) {
       const isValid = await bcrypt.compare(password, superAdmin.password_hash);
@@ -36,26 +35,25 @@ const authService = {
     }
 
     // 2. Tìm trong bảng users (admin / cashier)
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, tenant_id, username, email, password_hash, role, is_active')
-      .eq('username', username)
-      .eq('is_active', true)
-      .single();
+    const userRes = await db.query(
+      'SELECT id, tenant_id, username, email, password_hash, role, is_active FROM users WHERE username = $1 AND is_active = true',
+      [username]
+    );
+    const user = userRes.rows[0];
 
-    if (error || !user) throw new Error('Invalid username or password');
+    if (!user) throw new Error('Invalid username or password');
 
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) throw new Error('Invalid username or password');
 
     // Lấy thông tin tenant
-    const { data: tenant, error: tenantError } = await supabase
-      .from('tenants')
-      .select('id, name, slug, email, phone, address, logo_url')
-      .eq('id', user.tenant_id)
-      .single();
+    const tenantRes = await db.query(
+      'SELECT id, name, slug, email, phone, address, logo_url FROM tenants WHERE id = $1',
+      [user.tenant_id]
+    );
+    const tenant = tenantRes.rows[0];
 
-    if (tenantError || !tenant) throw new Error('Tenant not found');
+    if (!tenant) throw new Error('Tenant not found');
 
     const token = jwt.sign(
       { userId: user.id, tenantId: user.tenant_id, role: user.role },
@@ -79,48 +77,44 @@ const authService = {
   async changePassword(userId, tenantId, currentPassword, newPassword) {
     // Nếu là super admin
     if (!tenantId) {
-      const { data: superAdmin, error } = await supabase
-        .from('super_admins')
-        .select('id, password_hash')
-        .eq('id', userId)
-        .single();
+      const superAdminRes = await db.query(
+        'SELECT id, password_hash FROM super_admins WHERE id = $1',
+        [userId]
+      );
+      const superAdmin = superAdminRes.rows[0];
 
-      if (error || !superAdmin) throw new Error('User not found');
+      if (!superAdmin) throw new Error('User not found');
 
       const isValid = await bcrypt.compare(currentPassword, superAdmin.password_hash);
       if (!isValid) throw new Error('Current password is incorrect');
 
       const hash = await bcrypt.hash(newPassword, 10);
-      const { error: updateError } = await supabase
-        .from('super_admins')
-        .update({ password_hash: hash })
-        .eq('id', userId);
+      await db.query(
+        'UPDATE super_admins SET password_hash = $1 WHERE id = $2',
+        [hash, userId]
+      );
 
-      if (updateError) throw new Error('Failed to update password');
       return true;
     }
 
     // Nếu là user thường
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, password_hash')
-      .eq('id', userId)
-      .eq('tenant_id', tenantId)
-      .single();
+    const userRes = await db.query(
+      'SELECT id, password_hash FROM users WHERE id = $1 AND tenant_id = $2',
+      [userId, tenantId]
+    );
+    const user = userRes.rows[0];
 
-    if (error || !user) throw new Error('User not found');
+    if (!user) throw new Error('User not found');
 
     const isValid = await bcrypt.compare(currentPassword, user.password_hash);
     if (!isValid) throw new Error('Current password is incorrect');
 
     const hash = await bcrypt.hash(newPassword, 10);
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ password_hash: hash })
-      .eq('id', userId)
-      .eq('tenant_id', tenantId);
+    await db.query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2 AND tenant_id = $3',
+      [hash, userId, tenantId]
+    );
 
-    if (updateError) throw new Error('Failed to update password');
     return true;
   },
 };
