@@ -147,6 +147,7 @@ const buildReceiptHTML = (transaction, tenant) => {
 const emailService = {
   async sendReceipt(toEmail, transaction, tenant) {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('⚠ Skipping email receipt: EMAIL_USER or EMAIL_PASS not configured');
       return false;
     }
 

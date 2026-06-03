@@ -92,6 +92,7 @@ const transactionService = {
           fullTransaction.receipt_sent = true;
         } catch (emailErr) {
           // Email send failed, but don't fail the transaction
+          console.error('❌ Failed to send receipt email:', emailErr.message);
         }
       }
 
